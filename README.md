@@ -26,5 +26,7 @@ Options:
 
 ## Changelog
 
+* v0.1.1
+    + variable name correction 
 * v0.1.0
     + Base functionality. No switches available besides `--help` and `--version`
