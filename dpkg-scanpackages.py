@@ -16,17 +16,16 @@
 # Author: Raymond Velasquez <at.supermamon@gmail.com>
 
 script_name    = 'dpkg-scanpackages.py'
-script_version = '0.1.1'
+script_version = '0.2.0'
 
-import glob, sys, os
+import glob, sys, os, argparse
 from pydpkg import Dpkg
 
 class DpkgInfo:
-    def __init__(self,package_path):
-        self.filepath = package_path
+    def __init__(self,binary_path):
+        self.binary_path = binary_path
         self.headers = {}
-
-        pkg = Dpkg(package_path)
+        pkg = Dpkg(self.binary_path)
 
         # build the information for the apt repo
         self.headers = pkg.headers
@@ -48,83 +47,91 @@ class DpkgInfo:
         # add as per key order
         for key in keyOrder:
             if key in self.headers:
-                pretty = pretty + (key + ': {' + key + '}\n').format(**self.headers) 
+                pretty = pretty + ('{0}: {1}\n').format(key,self.headers[key])
         
         # add the rest alphabetically
         for key in sorted(self.headers.keys()):  
             if not key in keyOrder:
-                pretty = pretty + (key + ': {' + key + '}\n').format(**self.headers) 
+                pretty = pretty + ('{0}: {1}\n').format(key,self.headers[key]) 
         return pretty
 
 class DpkgScanpackages:
     def __init__(self,binary_path, multiversion=None,packageType=None):
         self.binary_path = binary_path
 
+        # throw an error if it's an invalid path
+        if not os.path.isdir(self.binary_path):
+            raise ValueError('binary path {0} not found'.format(self.binary_path))
+
         # options
         self.multiversion = multiversion if multiversion is not None else False
         self.packageType = packageType if packageType is not None else 'deb'
         self.packageList = []
 
+        # print('multiversion',self.multiversion)
+
     def __get_packages(self):
+        # get all files
         files = glob.glob( os.path.join(self.binary_path,"") + "*" + self.packageType )
         for fname in files:
-            pkg_info = str(DpkgInfo(fname))
-            self.packageList.append(pkg_info)
+            # extract the package information
+            pkg_info = DpkgInfo(fname)
 
-    def scan(self):
+            # if --multiversion switch is passed, append to the list
+            if self.multiversion==True:
+                self.packageList.append(pkg_info)
+            else:
+                # finf if package is already in the list
+                matchedItems = [(index,pkg) for (index,pkg) in enumerate(self.packageList) if self.packageList and pkg.headers['Package'] == pkg_info.headers['Package']]
+                if len(matchedItems)==0:
+                    # add if not
+                    self.packageList.append(pkg_info)
+                else:
+                    # compare versions and add if newer
+                    matchedIndex = matchedItems[0][0]
+                    matchedItem = matchedItems[0][1]
+
+                    dpkg = Dpkg(pkg_info.headers['Filename'])
+                    if dpkg.compare_version_with(matchedItem.headers['Version']) == 1:
+                        self.packageList[matchedIndex] = pkg_info
+
+    def scan(self,returnList=False):
         self.__get_packages()
-        for p in self.packageList:
-            print(p)
+        if (returnList):
+            return (self.packageList)
+        else:
+            for p in self.packageList:
+                print(str(p))
             
 def print_error(msg):
-    print(script_name + ': error: ' + msg)
+    COLOR_RED   = '\033[91m'
+    COLOR_RESET = "\033[0;0m"
+    COLOR_BOLD  = '\033[1m'
+    print('{0}:{1}{2} error{3}: {4}'.format(script_name,COLOR_RED,COLOR_BOLD,COLOR_RESET,msg))
     print('')
     print('Use --help for program usage information.')
 
-def print_help():
-    print('Usage: python ' + script_name + ' <binary-path> > Packages')
-    print('')
-    print('Options:')
-    print('  -?, --help               show this help message.') 
-    print('      --version            show the version.')
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--version',
+                        action='version',
+                        version='Debian %(prog)s version '+script_version+'.',
+                        help='show the version.')
+    parser.add_argument('-m','--multiversion',
+                        default=False,
+                        action="store_true",
+                        dest='multiversion',
+                        help='allow multiple versions of a single package.')
+    parser.add_argument('binary_path')
 
-def print_version():
-    print('Debian ' + script_name + ' version ' + script_version + '.')
-
-def main(argv):
-    arg_len = len(argv)
-
-    opts = '-? --help --version'
-    binary_path = "./"
-
-    if arg_len < 2:
-        print_error('one argument expected')
-        sys.exit(2)
-    elif arg_len > 2:
-        print('Too many arguments')
-        print_help()
-        sys.exit(2)
-
-    first_arg = argv[1].lower()
-    if first_arg in opts:
-        if first_arg == '--version':
-            print_version()
-            sys.exit(0)
-        elif first_arg == '-?' or first_arg == '--help':
-            print_help()
-            sys.exit(0)
-    elif first_arg.startswith('-'):
-            print_error('Unknown option: ' + first_arg)
-            sys.exit(2)
-    else:
-        #assume binary_path
-        binary_path = argv[1]
-
-    if not os.path.isdir(binary_path):
-        print('Invalid direcroty --',binary_path)
-        sys.exit(2)
-    
-    DpkgScanpackages(binary_path).scan()
+    args = parser.parse_args()    
+    try:
+        DpkgScanpackages(
+            binary_path=args.binary_path,
+            multiversion=args.multiversion
+        ).scan()
+    except ValueError as err:
+        print_error(err.message)
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()

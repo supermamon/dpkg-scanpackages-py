@@ -13,11 +13,15 @@ pip install pydpkg
 ## Usage
 
 ```
-Usage: python dpkg-scanpackages.py <binary-path> > Packages
+usage: dpkg-scanpackages.py [-h] [-v] [-m] binary_path
 
-Options:
-  -?, --help               show this help message. 
-      --version            show the version.
+positional arguments:
+  binary_path
+
+optional arguments:
+  -h, --help          show this help message and exit
+  -v, --version       show the version.
+  -m, --multiversion  allow multiple versions of a single package.
 ```
 
 ## Caveats
@@ -26,6 +30,8 @@ Options:
 
 ## Changelog
 
+* v0.2.0
+    + `--multiversion` parameter support 
 * v0.1.1
     + variable name correction 
 * v0.1.0
