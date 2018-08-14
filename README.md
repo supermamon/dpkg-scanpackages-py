@@ -13,15 +13,17 @@ pip install pydpkg
 ## Usage
 
 ```
-usage: dpkg-scanpackages.py [-h] [-v] [-m] binary_path
+usage: dpkg-scanpackages.py [-h] [-v] [-m] [-a ARCH] [-t TYPE] binary_path
 
 positional arguments:
   binary_path
 
 optional arguments:
-  -h, --help          show this help message and exit
-  -v, --version       show the version.
-  -m, --multiversion  allow multiple versions of a single package.
+  -h, --help            show this help message and exit
+  -v, --version         show the version
+  -m, --multiversion    allow multiple versions of a single package
+  -a ARCH, --arch ARCH  architecture to scan for
+  -t TYPE, --type TYPE  scan for <type> packages (default is 'deb').
 ```
 
 ## Caveats
@@ -30,9 +32,11 @@ optional arguments:
 
 ## Changelog
 
+* v0.3.0
+    * `--arch` and `--type` parameter support
 * v0.2.0
-    + `--multiversion` parameter support 
+    * `--multiversion` parameter support 
 * v0.1.1
-    + variable name correction 
+    * variable name correction 
 * v0.1.0
-    + Base functionality. No switches available besides `--help` and `--version`
+    * Base functionality. No switches available besides `--help` and `--version`

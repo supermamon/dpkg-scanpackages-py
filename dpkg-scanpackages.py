@@ -16,7 +16,7 @@
 # Author: Raymond Velasquez <at.supermamon@gmail.com>
 
 script_name    = 'dpkg-scanpackages.py'
-script_version = '0.2.0'
+script_version = '0.3.0'
 
 import glob, sys, os, argparse
 from pydpkg import Dpkg
@@ -56,7 +56,7 @@ class DpkgInfo:
         return pretty
 
 class DpkgScanpackages:
-    def __init__(self,binary_path, multiversion=None,packageType=None):
+    def __init__(self,binary_path, multiversion=None,packageType=None,arch=None):
         self.binary_path = binary_path
 
         # throw an error if it's an invalid path
@@ -66,9 +66,9 @@ class DpkgScanpackages:
         # options
         self.multiversion = multiversion if multiversion is not None else False
         self.packageType = packageType if packageType is not None else 'deb'
-        self.packageList = []
+        self.arch = arch
 
-        # print('multiversion',self.multiversion)
+        self.packageList = []
 
     def __get_packages(self):
         # get all files
@@ -76,6 +76,11 @@ class DpkgScanpackages:
         for fname in files:
             # extract the package information
             pkg_info = DpkgInfo(fname)
+
+            # if arch is defined and does not match package, move on to the next
+            if self.arch is not None:
+                if str(pkg_info.headers['Architecture']) != self.arch:
+                    continue
 
             # if --multiversion switch is passed, append to the list
             if self.multiversion==True:
@@ -122,13 +127,25 @@ def main():
                         action="store_true",
                         dest='multiversion',
                         help='allow multiple versions of a single package.')
+    parser.add_argument('-a','--arch',
+                        default=None,
+                        action="store",
+                        dest='arch',
+                        help='architecture to scan for.')
+    parser.add_argument('-t','--type',
+                        default='deb',
+                        action="store",
+                        dest='type',
+                        help='scan for <type> packages (default is \'deb\').')    
     parser.add_argument('binary_path')
 
     args = parser.parse_args()    
     try:
         DpkgScanpackages(
             binary_path=args.binary_path,
-            multiversion=args.multiversion
+            multiversion=args.multiversion,
+            arch=args.arch,
+            packageType=args.type
         ).scan()
     except ValueError as err:
         print_error(err.message)
