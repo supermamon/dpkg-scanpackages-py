@@ -13,25 +13,29 @@ pip install pydpkg
 ## Usage
 
 ```
-usage: dpkg-scanpackages.py [-h] [-v] [-m] [-a ARCH] [-t TYPE] binary_path
+usage: dpkg-scanpackages.py [-h] [-v] [-m] [-a ARCH] [-t TYPE] [-o OUTPUT]
+                            binary_path
 
 positional arguments:
   binary_path
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -v, --version         show the version
-  -m, --multiversion    allow multiple versions of a single package
-  -a ARCH, --arch ARCH  architecture to scan for
-  -t TYPE, --type TYPE  scan for <type> packages (default is 'deb').
+  -h, --help                    show this help message and exit
+  -v, --version                 show the version.
+  -m, --multiversion            allow multiple versions of a single package.
+  -a ARCH, --arch ARCH          architecture to scan for.
+  -t TYPE, --type TYPE          scan for <type> packages (default is 'deb').
+  -o OUTPUT, --output OUTPUT    Write to file instead of stdout
 ```
 
 ## Caveats
 
-* On Windows™, piping the output to a file results into a file with CRLF endings. File must me converted to unix-style (LF) line endings before using in an apt repo. 
+* On Windows™, piping the output to a file results into a file with CRLF endings. File must me converted to unix-style (LF) line endings before using in an apt repo. Or use the `--output` parameter to save the output directly to file.
 
 ## Changelog
 
+* v0.4.0
+    * `--output` parameter. Write to file instead of stdout.
 * v0.3.0
     * `--arch` and `--type` parameter support
 * v0.2.0

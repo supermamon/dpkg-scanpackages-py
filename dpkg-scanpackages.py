@@ -16,7 +16,7 @@
 # Author: Raymond Velasquez <at.supermamon@gmail.com>
 
 script_name    = 'dpkg-scanpackages.py'
-script_version = '0.3.0'
+script_version = '0.4.0'
 
 import glob, sys, os, argparse
 from pydpkg import Dpkg
@@ -56,7 +56,7 @@ class DpkgInfo:
         return pretty
 
 class DpkgScanpackages:
-    def __init__(self,binary_path, multiversion=None,packageType=None,arch=None):
+    def __init__(self,binary_path, multiversion=None,packageType=None,arch=None,output=None):
         self.binary_path = binary_path
 
         # throw an error if it's an invalid path
@@ -67,6 +67,7 @@ class DpkgScanpackages:
         self.multiversion = multiversion if multiversion is not None else False
         self.packageType = packageType if packageType is not None else 'deb'
         self.arch = arch
+        self.output = output
 
         self.packageList = []
 
@@ -105,9 +106,19 @@ class DpkgScanpackages:
         if (returnList):
             return (self.packageList)
         else:
+            if not self.output is None:
+                file = open(self.output, "w")
+
             for p in self.packageList:
-                print(str(p))
-            
+                if self.output is None:
+                    print(str(p))
+                else:
+                    file.write(str(p))
+                    file.write("\n")
+            if not self.output is None:
+                file.close()
+
+
 def print_error(msg):
     COLOR_RED   = '\033[91m'
     COLOR_RESET = "\033[0;0m"
@@ -137,6 +148,10 @@ def main():
                         action="store",
                         dest='type',
                         help='scan for <type> packages (default is \'deb\').')    
+    parser.add_argument('-o','--output',
+                        action="store",
+                        dest='output',
+                        help='Write to file instead of stdout')    
     parser.add_argument('binary_path')
 
     args = parser.parse_args()    
@@ -145,7 +160,8 @@ def main():
             binary_path=args.binary_path,
             multiversion=args.multiversion,
             arch=args.arch,
-            packageType=args.type
+            packageType=args.type,
+            output=args.output
         ).scan()
     except ValueError as err:
         print_error(err.message)
