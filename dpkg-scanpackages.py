@@ -16,7 +16,7 @@
 # Author: Raymond Velasquez <at.supermamon@gmail.com>
 
 script_name    = 'dpkg-scanpackages.py'
-script_version = '0.4.0'
+script_version = '0.4.1'
 
 import glob, sys, os, argparse
 from pydpkg import Dpkg
@@ -48,11 +48,11 @@ class DpkgInfo:
         for key in keyOrder:
             if key in self.headers:
                 pretty = pretty + ('{0}: {1}\n').format(key,self.headers[key])
-        
+
         # add the rest alphabetically
-        for key in sorted(self.headers.keys()):  
+        for key in sorted(self.headers.keys()):
             if not key in keyOrder:
-                pretty = pretty + ('{0}: {1}\n').format(key,self.headers[key]) 
+                pretty = pretty + ('{0}: {1}\n').format(key,self.headers[key])
         return pretty
 
 class DpkgScanpackages:
@@ -107,14 +107,14 @@ class DpkgScanpackages:
             return (self.packageList)
         else:
             if not self.output is None:
-                file = open(self.output, "w")
+                file = open(self.output, "wb")
 
             for p in self.packageList:
                 if self.output is None:
                     print(str(p))
                 else:
-                    file.write(str(p))
-                    file.write("\n")
+                    file.write(bytes(str(p),'utf-8'))
+                    file.write(bytes("\n",'utf-8'))
             if not self.output is None:
                 file.close()
 
@@ -147,14 +147,14 @@ def main():
                         default='deb',
                         action="store",
                         dest='type',
-                        help='scan for <type> packages (default is \'deb\').')    
+                        help='scan for <type> packages (default is \'deb\').')
     parser.add_argument('-o','--output',
                         action="store",
                         dest='output',
-                        help='Write to file instead of stdout')    
+                        help='Write to file instead of stdout')
     parser.add_argument('binary_path')
 
-    args = parser.parse_args()    
+    args = parser.parse_args()
     try:
         DpkgScanpackages(
             binary_path=args.binary_path,
